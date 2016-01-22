@@ -19,6 +19,7 @@ var star = {
     return 350+scale(val)*Math.sin(angle*2*Math.PI);
   },
   getCoords: function(val, angle, idx){
+    var angle = angle-0.25;//-0.25 makes the star point upward
     return "L "+this.getXoffset(val,angle,idx)+" "+this.getYoffset(val,angle,idx)
   },
   makeScales: function(extents){
@@ -38,27 +39,53 @@ var star = {
       d3.extent(data, function(d){return +d.blocks_mean})
     ]
   },
-  makeGuides: function(min,max){
+  getDataMeans: function(data){
+    return [
+      d3.mean(data, function(d){return +d.points_mean}),
+      d3.mean(data, function(d){return +d.rebounds_mean}),
+      d3.mean(data, function(d){return +d.assists_mean}),
+      d3.mean(data, function(d){return +d.steals_mean}),
+      d3.mean(data, function(d){return +d.blocks_mean})
+    ]
+  },
+  makeGuides: function(min,max,mean){
     var self = this;
-    d3.select(".star").selectAll(".min").data(min).enter().append("path").attr("class","min")
+    var stats = ["pts","reb","ast","stl","blk"]
+    var guides = d3.select(".star").append("g").attr("class","guides");
+    var guide = guides.selectAll("guide").data([min,max,mean]).enter().append("g")
+      .attr("class",function(d,i){
+        var type = (i==0)?"min":(i==1)?"max":"mean";
+        return "guide "+type;
+      });
+    guide.selectAll("path").data(function(d){return d}).enter().append("path")
       .attr("d",function(d,i){
-        var pct = i/min.length;
-        var next = (i==min.length-1)?0:i+1;
-        var nextPct = next/min.length;
-        return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(min[next],nextPct,next)
+        var datum = d3.select(this.parentNode).datum();
+        var pct = i/datum.length;
+        var next = (i==datum.length-1)?0:i+1;
+        var nextPct = next/datum.length;
+        return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(datum[next],nextPct,next)
       })
       .style("stroke","black").style("fill","none")
       .style("stroke-width",0.2)
 
-    d3.select(".star").selectAll(".max").data(max).enter().append("path").attr("class","max")
-      .attr("d",function(d,i){
-        var pct = i/max.length;
-        var next = (i==max.length-1)?0:i+1;
-        var nextPct = next/max.length;
-        return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(max[next],nextPct,next)
+    guides.selectAll(":not(.min)").selectAll("text").data(function(d){return d}).enter().append("text")
+      .attr("transform", function(d,i){
+        var datum = d3.select(this.parentNode).datum();
+        var pct = (i/datum.length)-0.25;
+        var rotate = (i==2||i==3)?360/datum.length*i+180:360/datum.length*i;
+        var xOff = self.getXoffset(d,pct,i);
+        var yOff = self.getYoffset(d,pct,i);
+        yOff += (i==2||i==3)?12:0;
+        return "translate("+xOff+","+yOff+")rotate("+rotate+")";
       })
-      .style("stroke","black").style("fill","none")
-      .style("stroke-width",0.2)
+      .text(function(d,i){
+        return d3.round(d,1)+" "+stats[i];
+      })
+      .attr('text-anchor', function(d,i){
+        var anchor = "middle"
+        return anchor;
+      })
+      .style("font-size","0.9em")
   },
   updateChart: function(data){
     var self = this;
@@ -80,7 +107,7 @@ var star = {
         var nextPct = next/dt.length;
         return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(dt[next],nextPct,next)
       })
-      .style("stroke","black").style("fill","none")
+      .style("stroke","none").style("fill","rgba(0,255,255,0.2)")
 
     selection.exit().remove();
   },
@@ -99,7 +126,9 @@ var star = {
       self.makeScales(extents);
       var min = extents.map(function(d){return d[0]})
       var max = extents.map(function(d){return d[1]})
-      self.makeGuides(min,max);
+      var mean = self.getDataMeans(data);
+
+      self.makeGuides(min,max,mean);
       var names = d3.select(".names").selectAll(".name").data(data).enter().append("div")
         .attr("class", "name").text(function(d){return d.player})
       self.bindInteraction();
