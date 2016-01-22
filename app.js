@@ -7,7 +7,7 @@ var star = {
     pageComponents.svg = d3.select(".svg-container").append("svg").attr("height",700).attr("width",700);
     pageComponents.star = pageComponents.svg.append("g").attr("class","star");
     for (var i=0;i<5;i++){
-      pageComponents.scales.push(d3.scale.linear().range([20,350]))
+      pageComponents.scales.push(d3.scale.linear().range([20,300]))
     }
   },
   getXoffset: function(val,angle,idx){
@@ -21,13 +21,44 @@ var star = {
   getCoords: function(val, angle, idx){
     return "L "+this.getXoffset(val,angle,idx)+" "+this.getYoffset(val,angle,idx)
   },
-  makeScales: function(data){
+  makeScales: function(extents){
     var scales = this.pageComponents.scales;
-    scales[0].domain(d3.extent(data, function(d){return +d.points_mean}))
-    scales[1].domain(d3.extent(data, function(d){return +d.rebounds_mean}))
-    scales[2].domain(d3.extent(data, function(d){return +d.assists_mean}))
-    scales[3].domain(d3.extent(data, function(d){return +d.steals_mean}))
-    scales[4].domain(d3.extent(data, function(d){return +d.blocks_mean}))
+    scales[0].domain(extents[0])
+    scales[1].domain(extents[1])
+    scales[2].domain(extents[2])
+    scales[3].domain(extents[3])
+    scales[4].domain(extents[4])
+  },
+  getExtents: function(data){
+    return [
+      d3.extent(data, function(d){return +d.points_mean}),
+      d3.extent(data, function(d){return +d.rebounds_mean}),
+      d3.extent(data, function(d){return +d.assists_mean}),
+      d3.extent(data, function(d){return +d.steals_mean}),
+      d3.extent(data, function(d){return +d.blocks_mean})
+    ]
+  },
+  makeGuides: function(min,max){
+    var self = this;
+    d3.select(".star").selectAll(".min").data(min).enter().append("path").attr("class","min")
+      .attr("d",function(d,i){
+        var pct = i/min.length;
+        var next = (i==min.length-1)?0:i+1;
+        var nextPct = next/min.length;
+        return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(min[next],nextPct,next)
+      })
+      .style("stroke","black").style("fill","none")
+      .style("stroke-width",0.2)
+
+    d3.select(".star").selectAll(".max").data(max).enter().append("path").attr("class","max")
+      .attr("d",function(d,i){
+        var pct = i/max.length;
+        var next = (i==max.length-1)?0:i+1;
+        var nextPct = next/max.length;
+        return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(max[next],nextPct,next)
+      })
+      .style("stroke","black").style("fill","none")
+      .style("stroke-width",0.2)
   },
   updateChart: function(data){
     var self = this;
@@ -64,7 +95,11 @@ var star = {
     var self = this;
     self.getPageComponents();
     d3.csv("olympic.csv", function(err,data){
-      self.makeScales(data);
+      var extents = self.getExtents(data);
+      self.makeScales(extents);
+      var min = extents.map(function(d){return d[0]})
+      var max = extents.map(function(d){return d[1]})
+      self.makeGuides(min,max);
       var names = d3.select(".names").selectAll(".name").data(data).enter().append("div")
         .attr("class", "name").text(function(d){return d.player})
       self.bindInteraction();
