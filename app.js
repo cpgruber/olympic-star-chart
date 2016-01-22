@@ -57,6 +57,7 @@ var star = {
     var self = this;
     d3.selectAll(".name").on("mouseover", function(d){
       self.updateChart(d)
+      d3.select(".player").text(d.player)
     })
   },
   init:function(){
@@ -66,7 +67,6 @@ var star = {
       self.makeScales(data);
       var names = d3.select(".names").selectAll(".name").data(data).enter().append("div")
         .attr("class", "name").text(function(d){return d.player})
-      self.updateChart(data[0])
       self.bindInteraction();
     })
   }

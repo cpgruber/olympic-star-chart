@@ -1,0 +1,25 @@
+@import url(https://fonts.googleapis.com/css?family=Montserrat);
+*{
+  box-sizing: border-box;
+  margin:0;
+  font-family: "Montserrat", "Helvetica Neue", "Helvetica", "Roboto", "Arial", sans-serif, sans-serif;
+}
+.names{
+  width:auto;
+  float:left;
+  padding:10px;
+}
+.name{
+  padding:2px;
+}
+.name:hover{
+  background:rgba(0,255,255,0.2);
+}
+.svg-container{
+  width:700px;
+  vertical-align: middle;
+  float:left;
+}
+.player{
+  text-align:center;
+}
