@@ -7,7 +7,7 @@ var star = {
     pageComponents.svg = d3.select(".svg-container").append("svg").attr("height",700).attr("width",700);
     pageComponents.star = pageComponents.svg.append("g").attr("class","star");
     for (var i=0;i<5;i++){
-      pageComponents.scales.push(d3.scale.linear().range([20,300]))
+      pageComponents.scales.push(d3.scale.linear().range([10,300]))
     }
   },
   getXoffset: function(val,angle,idx){

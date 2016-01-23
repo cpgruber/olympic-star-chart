@@ -23,3 +23,8 @@ p{
 .player{
   text-align:center;
 }
+label{
+  display:block;
+  text-align:right;
+}
+input{margin-right:8px;}
