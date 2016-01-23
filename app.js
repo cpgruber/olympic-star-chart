@@ -1,7 +1,6 @@
 var star = {
   pageComponents:{
-    scales:[],
-    colorScale: d3.scale.linear().domain([0,10]).range(['red','blue'])
+    scales:[]
   },
   getPageComponents: function(){
     var pageComponents = this.pageComponents;
@@ -92,7 +91,7 @@ var star = {
     var self = this;
     var dt = [+data.points_mean,+data.rebounds_mean,+data.assists_mean,+data.steals_mean,+data.blocks_mean];
     var playerName = data.player.replace(" ","-")
-    var selection = d3.select(".star").selectAll(".arm-"+playerName).data(dt)
+    var selection = d3.select(".star").selectAll(".arm-"+color).data(dt)
     var scales = self.pageComponents.scales;
     selection.transition().duration(500)
       .attr("d",function(d,i){
@@ -100,9 +99,9 @@ var star = {
         var next = (i==dt.length-1)?0:i+1;
         var nextPct = next/dt.length;
         return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(dt[next],nextPct,next)
-      })
+      }).style("fill",color)
 
-    selection.enter().append("path").attr("class","arm-"+playerName)
+    selection.enter().append("path").attr("class","arm-"+color)
       .attr("d",function(d,i){
         var pct = i/dt.length;
         var next = (i==dt.length-1)?0:i+1;
@@ -116,18 +115,45 @@ var star = {
   bindInteraction: function(){
     var self = this;
     d3.selectAll(".name").on("click", function(d){
-      var clicked = d3.selectAll(".name.clicked")[0].length;
-      var color = self.pageComponents.colorScale(clicked);
+      var color = d3.selectAll("input[name=color]:checked").node().value;
       var rgb = d3.rgb(color);
       var className = d3.select(this).attr("class");
-      if (className == "name clicked"){
-        d3.selectAll(".arm-"+d.player.replace(" ","-")).remove();
+      if (d3.select(this).attr("class").split(" ").length > 1 && d3.select(this).attr("class").split(" ")[1]!=color){
+        return;
+      }
+      if (className == "name "+color){
+        d3.selectAll(".arm-"+color).remove();
         d3.select(this).attr("class","name").style("background","none")
       }else{
-        d3.select(this).attr("class","name clicked")
+        d3.select(".name."+color).attr("class","name").style("background","none")
+        d3.select(this).attr("class","name "+color)
           .style("background", "rgba("+rgb.r+","+rgb.g+","+rgb.b+",0.2)")
         self.updateChart(d,color)
-        d3.select(".player").text(d.player)
+      }
+    });
+
+    d3.selectAll(".name").on("mouseover", function(d){
+      var color = d3.selectAll("input[name=color]:checked").node().value;
+      var rgb = d3.rgb(color);
+      if (d3.select(this).attr("class").split(" ").length > 1){
+        return;
+      }
+      if (d3.selectAll(".name."+color)[0].length == 0){
+        d3.select(this)
+          .style("background", "rgba("+rgb.r+","+rgb.g+","+rgb.b+",0.2)")
+        self.updateChart(d,color)
+        d3.selectAll(".arm-"+color).style("opacity",1)
+      }
+    })
+
+    d3.selectAll(".name").on("mouseout", function(d){
+      var color = d3.selectAll("input[name=color]:checked").node().value;
+      if (d3.select(this).attr("class").split(" ").length > 1){
+        return;
+      }
+      if (d3.selectAll(".name."+color)[0].length == 0){
+        d3.select(this).style("background", "none")
+        d3.selectAll(".arm-"+color).style("opacity",0)
       }
     })
   },
