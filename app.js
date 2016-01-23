@@ -89,8 +89,9 @@ var star = {
   },
   updateChart: function(data){
     var self = this;
-    var dt = [+data.points_mean,+data.rebounds_mean,+data.assists_mean,+data.steals_mean,+data.blocks_mean]
-    var selection = d3.select(".star").selectAll(".arm").data(dt)
+    var dt = [+data.points_mean,+data.rebounds_mean,+data.assists_mean,+data.steals_mean,+data.blocks_mean];
+    var playerName = data.player.replace(" ","-")
+    var selection = d3.select(".star").selectAll(".arm-"+playerName).data(dt)
     var scales = self.pageComponents.scales;
     selection.transition().duration(500)
       .attr("d",function(d,i){
@@ -100,7 +101,7 @@ var star = {
         return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(dt[next],nextPct,next)
       })
 
-    selection.enter().append("path").attr("class","arm")
+    selection.enter().append("path").attr("class","arm-"+playerName)
       .attr("d",function(d,i){
         var pct = i/dt.length;
         var next = (i==dt.length-1)?0:i+1;
@@ -113,7 +114,7 @@ var star = {
   },
   bindInteraction: function(){
     var self = this;
-    d3.selectAll(".name").on("mouseover", function(d){
+    d3.selectAll(".name").on("click", function(d){
       self.updateChart(d)
       d3.select(".player").text(d.player)
     })
