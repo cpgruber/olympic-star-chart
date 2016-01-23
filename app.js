@@ -1,6 +1,7 @@
 var star = {
   pageComponents:{
-    scales:[]
+    scales:[],
+    colorScale: d3.scale.linear().domain([0,10]).range(['red','blue'])
   },
   getPageComponents: function(){
     var pageComponents = this.pageComponents;
@@ -87,7 +88,7 @@ var star = {
       })
       .style("font-size","0.9em")
   },
-  updateChart: function(data){
+  updateChart: function(data,color){
     var self = this;
     var dt = [+data.points_mean,+data.rebounds_mean,+data.assists_mean,+data.steals_mean,+data.blocks_mean];
     var playerName = data.player.replace(" ","-")
@@ -108,15 +109,26 @@ var star = {
         var nextPct = next/dt.length;
         return "M 350 350 "+self.getCoords(d,pct,i)+" "+self.getCoords(dt[next],nextPct,next)
       })
-      .style("stroke","none").style("fill","rgba(0,255,255,0.2)")
+      .style("stroke","none").style("fill",color).style("fill-opacity",0.2)
 
     selection.exit().remove();
   },
   bindInteraction: function(){
     var self = this;
     d3.selectAll(".name").on("click", function(d){
-      self.updateChart(d)
-      d3.select(".player").text(d.player)
+      var clicked = d3.selectAll(".name.clicked")[0].length;
+      var color = self.pageComponents.colorScale(clicked);
+      var rgb = d3.rgb(color);
+      var className = d3.select(this).attr("class");
+      if (className == "name clicked"){
+        d3.selectAll(".arm-"+d.player.replace(" ","-")).remove();
+        d3.select(this).attr("class","name").style("background","none")
+      }else{
+        d3.select(this).attr("class","name clicked")
+          .style("background", "rgba("+rgb.r+","+rgb.g+","+rgb.b+",0.2)")
+        self.updateChart(d,color)
+        d3.select(".player").text(d.player)
+      }
     })
   },
   init:function(){
